@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mamoon Hashmi - AI Engineer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+        }
+
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header.active {
+            display: flex;
+        }
+
+        .header .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .avatar svg {
+            width: 35px;
+            height: 35px;
+            fill: white;
+        }
+
+        .header .name {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .intro-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .intro-section.hidden {
+            display: none;
+        }
+
+        .greeting {
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .emoji {
+            display: inline-block;
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+
+        h1 {
+            font-size: 4rem;
+            color: white;
+            margin-bottom: 40px;
+            font-weight: 800;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .avatar-large {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .avatar-large img {
+            width: 95%;
+            height: 95%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .avatar-large::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.7;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .avatar-large svg {
+            width: 100px;
+            height: 100px;
+            fill: white;
+        }
+
+        .name-large {
+            font-size: 2.5rem;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-section {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            padding-top: 100px;
+        }
+
+        .chat-section.active {
+            display: flex;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            text-align: start;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 18px 330px 18px 25px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .chat-input:focus {
+            background: white;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-input::placeholder {
+            color: #999;
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 30px;
+            top: 41%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            color: black;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .menu {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .menu.hidden {
+            display: none;
+        }
+
+        .menu-item {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+        }
+
+        .menu-item:hover {
+            background: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-item-icon {
+            width: 30px;
+            height: 30px;
+            margin-bottom: 8px;
+        }
+
+        .menu-item-text {
+            color: #333;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .cv-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .cv-btn:hover {
+            background: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+.message-content strong { font-weight: 600; }
+.message-content em    { font-style: italic; }
+
+.message-content ul.chat-list {
+    padding-left: 20px;
+}
+.message-content ul.chat-list li {
+    line-height: 1.4;
+}
+.message-content ul.chat-list li::marker {
+    color: black;
+    font-size: 1.2em;
+}
+
+.message-content pre {
+    background: #f6f8fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+    border: 1px solid #e1e4e8;
+    font-size: 13px;
+}
+.message-content pre code {
+    background: none;
+    padding: 0;
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+.message-content .inline-code {
+    background: rgba(0,0,0,.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 90%;
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .name-large {
+                font-size: 1.8rem;
+            }
+
+            .avatar-large {
+                width: 140px;
+                height: 140px;
+            }
+
+            .avatar-large svg {
+                width: 70px;
+                height: 70px;
+            }
+
+            .menu {
+                gap: 10px;
+            }
+
+            .menu-item {
+                min-width: 100px;
+                padding: 15px 20px;
+            }
+
+            .send-btn {
+                right: 30px;
+            }
+
+            .cv-btn {
+                top: 15px;
+                right: 15px;
+                padding: 10px 20px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header .name {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <a href="mamoon_resume.pdf" class="cv-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        CV
+    </a>
+
+    <div class="header" id="header">
+        <div class="avatar">
+            <svg viewBox="0 0 20 20" fill="white">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="name">Mamoon Hashmi</div>
+    </div>
+
+    <div class="container">
+        <div class="intro-section" id="introSection">
+            <div class="greeting">
+                Hey, I'm Mamoon Hashmi <span class="emoji">👋</span>
+            </div>
+            
+            <h1>AI Engineer</h1>
+
+            <div class="avatar-large">
+                <svg viewBox="0 0 20 20" fill="white">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+            </div>
+
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" placeholder="Ask me anything..." id="chatInput">
+                <button class="send-btn" id="sendBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="menu" id="menu">
+                <div class="menu-item" data-text="Me">
+                    <svg class="menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <div class="menu-item-text">Me</div>
+                </div>
+
+                <div class="menu-item" data-text="Projects">
+                    <svg class="menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    <div class="menu-item-text">Projects</div>
+                </div>
+
+                <div class="menu-item" data-text="Skills">
+                    <svg class="menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                    <div class="menu-item-text">Skills</div>
+                </div>
+
+                <div class="menu-item" data-text="Experience">
+                    <svg class="menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <div class="menu-item-text">Experience</div>
+                </div>
+
+                <div class="menu-item" data-text="Contact">
+                    <svg class="menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <div class="menu-item-text">Contact</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section" id="chatSection">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" placeholder="Type your message..." id="chatInput2">
+                <button class="send-btn" id="sendBtn2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* ==============================================================
+   CLEAN CHAT – PER-TAB MEMORY + GREETING ON FIRST USER MESSAGE
+   ============================================================== */
+const introSection   = document.getElementById('introSection');
+const chatSection    = document.getElementById('chatSection');
+const header         = document.getElementById('header');
+const menu           = document.getElementById('menu');
+const chatMessages   = document.getElementById('chatMessages');
+const chatInput1     = document.getElementById('chatInput');
+const chatInput2     = document.getElementById('chatInput2');
+const sendBtn1       = document.getElementById('sendBtn');
+const sendBtn2       = document.getElementById('sendBtn2');
+
+let isChatActive = false;
+let TAB_ID = null;               // <--- NEW: unique per tab
+
+/* ---------- UI ---------- */
+function switchToChat() {
+    if (isChatActive) return;
+    isChatActive = true;
+    introSection.classList.add('hidden');
+    chatSection.classList.add('active');
+    header.classList.add('active');
+    menu.classList.add('hidden');
+    particles.length = 0;
+}
+
+function addMessage(rawText, isUser) {
+    const div = document.createElement('div');
+    div.className = `message ${isUser ? 'user' : 'bot'}`;
+
+    // Step 1: Escape HTML first
+    let html = rawText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Step 2: Code blocks (```...```) → <pre><code>
+    html = html.replace(/```([\w]*)\n([\s\S]*?)\n```/g, (m, lang, code) => {
+        const langClass = lang ? `language-${lang}` : '';
+        const escaped = code
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return `<pre><code class="${langClass}">${escaped}</code></pre>`;
+    });
+
+    // Step 3: Inline code (`...`) → <code>
+    html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+    // Step 4: Convert Markdown list lines: "* Item" or "- Item" → <li>
+    // We'll collect them and wrap in <ul>
+   const lines = html.split('\n');
+let inList = false;
+let processedLines = [];
+
+for (let line of lines) {
+    const trimmed = line.trim();
+
+    // Skip completely empty lines (they become <br> and create big gaps)
+    if (trimmed === '') {
+        // If we are inside a list, close it first
+        if (inList) {
+            inList = false;
+            processedLines.push('</ul>');
+        }
+        continue;               // <-- ignore the blank line
+    }
+
+    // List item?
+    if (/^(\*|-|•)\s/.test(trimmed)) {
+        if (!inList) {
+            inList = true;
+            processedLines.push('<ul class="chat-list">');
+        }
+        const itemText = trimmed.replace(/^(\*|-|•)\s*/, '');
+        processedLines.push(`<li>${itemText}</li>`);
+    } else {
+        if (inList) {
+            inList = false;
+            processedLines.push('</ul>');
+        }
+        processedLines.push(line);
+    }
+}
+if (inList) processedLines.push('</ul>');
+html = processedLines.join('\n');
+    // Step 5: Bold, Italic (after list processing)
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // Step 6: Convert remaining \n → <br> (but not inside <pre> or <code>)
+    // We do this carefully: only outside tags
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+        if (!node.parentNode.closest('pre, code')) {
+            textNodes.push(node);
+        }
+    }
+    textNodes.forEach(textNode => {
+        if (textNode.nodeValue.includes('\n')) {
+            const parts = textNode.nodeValue.split('\n');
+            const fragment = document.createDocumentFragment();
+            parts.forEach((part, i) => {
+                if (i > 0) fragment.appendChild(document.createElement('br'));
+                fragment.appendChild(document.createTextNode(part));
+            });
+            textNode.parentNode.replaceChild(fragment, textNode);
+        }
+    });
+    html = tempDiv.innerHTML;
+
+    // Step 7: Final insert
+    div.innerHTML = `<div class="message-content">${html}</div>`;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Step 8: Optional Prism Highlight
+    if (window.Prism) {
+        div.querySelectorAll('pre code').forEach(Prism.highlightElement);
+    }
+}
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/* ---------- SERVER ---------- */
+async function sendMessage(message) {
+    const payload = { message };
+    if (TAB_ID) payload.tab_id = TAB_ID;          // reuse existing tab id
+
+    const resp = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+
+    // Save the tab_id for the rest of this tab's life
+    if (!TAB_ID && data.tab_id) {
+        TAB_ID = data.tab_id;
+    }
+
+    return data.reply || "";
+}
+
+/* ---------- HANDLE SEND ---------- */
+async function handleSend(inputEl) {
+    const msg = inputEl.value.trim();
+    if (!msg) return;
+
+    if (!isChatActive) switchToChat();
+
+    addMessage(msg, true);
+    inputEl.value = "";
+
+    // Typing indicator
+    const typing = document.createElement('div');
+    typing.className = "message bot";
+    typing.innerHTML = `<div class="message-content"><i>Mamoon is typing...</i></div>`;
+    chatMessages.appendChild(typing);
+
+    const reply = await sendMessage(msg);
+    chatMessages.removeChild(typing);
+    addMessage(reply, false);
+}
+
+// Bind both inputs
+[chatInput1, chatInput2].forEach((input, i) => {
+    const btn = i === 0 ? sendBtn1 : sendBtn2;
+    btn.addEventListener('click', () => handleSend(input));
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();               // stop newline in textarea
+            handleSend(input);
+        }
+    });
+});
+
+/* ---------- MENU ITEMS (quick-send) ---------- */
+document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', async () => {
+        const text = item.getAttribute('data-text');
+        if (!isChatActive) switchToChat();
+
+        // Fake an input element so we can reuse handleSend logic
+        const fakeInput = { value: text };
+        await handleSend(fakeInput);
+    });
+});
+
+/* ---------- CANVAS (UNCHANGED) ---------- */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+const colors = [
+    'rgba(147,51,234,0.3)','rgba(236,72,153,0.3)','rgba(59,130,246,0.3)',
+    'rgba(16,185,129,0.3)','rgba(251,146,60,0.3)','rgba(244,63,94,0.3)',
+    'rgba(168,85,247,0.3)','rgba(34,211,238,0.3)'
+];
+
+class Particle {
+    constructor(x, y) {
+        this.x = x; this.y = y;
+        this.size = Math.random() * 50 + 30;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.life = 1;
+    }
+    update() {
+        this.x += this.speedX; this.y += this.speedY;
+        this.life -= 0.005;
+        if (this.size > 0.3) this.size -= 0.3;
+    }
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function animate() {
+    ctx.fillStyle = 'rgba(102,126,234,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].life <= 0 || particles[i].size <= 0.3) {
+            particles.splice(i, 1);
+            i--;
+        }
+    }
+    requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+/* ---------- PARTICLE ON CLICK (optional fun) ---------- */
+canvas.addEventListener('click', e => {
+    for (let i = 0; i < 8; i++) {
+        particles.push(new Particle(e.clientX, e.clientY));
+    }
+});
+</script>
+</body>
+</html>

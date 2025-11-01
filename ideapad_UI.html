@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with User Info</title>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <script>
+        (function () {
+            const style = document.createElement('style');
+            style.textContent = `
+            * { box-sizing: border-box; }
+            body { background: white; }
+            .powered-by { text-align: center; font-size: 12px; color: #999; margin-top: 6px; padding-bottom: 4px; }
+            .powered-by a { color: #956FD6; text-decoration: none; font-weight: bold; }
+            .chat-icon-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+            .chat-icon { background: #956FD6; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+            .chat-container { position: fixed; bottom: 20px; right: 20px; width: 380px; height: 550px; background: #fff; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); display: none; }
+            .chat-container.open { display: flex; flex-direction: column; }
+            .chat-header { padding: 15px; font-size: 18px; font-weight: bold; border-bottom: 1px solid #ddd; }
+            .chat-box { flex-grow: 1; padding: 15px; overflow-y: auto; }
+            .chat-input { display: flex; padding: 10px; border-top: 1px solid #ddd; }
+            .chat-input input { flex: 1; padding: 10px; border: none; border-radius: 20px; }
+            .chat-input button { padding: 10px 20px; background: #956FD6; color: white; border: none; border-radius: 20px; cursor: pointer; }
+            `;
+            document.head.appendChild(style);
+
+            const chatHTML = `
+            <div class="chat-icon-container">
+                <div class="chat-icon" id="chat-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+            </div>
+
+            <div class="chat-container" id="chat-container">
+                <div class="chat-header">Chat with Us</div>
+                <div class="chat-box" id="chat-box"></div>
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="Type your message...">
+                    <button id="send-btn">Send</button>
+                </div>
+            </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', chatHTML);
+
+            const chatIcon = document.getElementById('chat-icon');
+            const chatContainer = document.getElementById('chat-container');
+            const sendBtn = document.getElementById('send-btn');
+            const userInput = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+
+            chatIcon.addEventListener('click', () => {
+                chatContainer.classList.toggle('open');
+            });
+
+            sendBtn.addEventListener('click', () => {
+                handleUserMessage(userInput.value.trim());
+            });
+
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleUserMessage(userInput.value.trim());
+                }
+            });
+
+            function handleUserMessage(message) {
+                if (message === "") return;
+                appendMessage('user', message);
+                sendMessageToFlask(message);
+            }
+
+            function appendMessage(sender, message) {
+                const messageClass = sender === 'user' ? 'user-message' : 'ai-message';
+                const timestamp = new Date().toLocaleTimeString();
+                const messageHTML = `
+                    <div class="message ${messageClass}">
+                        <div class="message-content">${message}</div>
+                        <div class="timestamp">${timestamp}</div>
+                    </div>`;
+                chatBox.innerHTML += messageHTML;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            function sendMessageToFlask(message) {
+                appendMessage('ai', 'Typing...');
+
+                fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    chatBox.lastElementChild.remove();
+                    appendMessage('ai', data.response);
+                })
+                .catch(error => {
+                    chatBox.lastElementChild.remove();
+                    appendMessage('ai', 'Oops! Something went wrong. Please try again.');
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>
