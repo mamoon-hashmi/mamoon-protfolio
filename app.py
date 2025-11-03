@@ -30,7 +30,7 @@ app.secret_key = os.urandom(24).hex()
 # LLM & PROMPT (unchanged)
 # ========================================
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash-lite",
     temperature=0.3,
     # convert_system_message_to_human=True
 )
